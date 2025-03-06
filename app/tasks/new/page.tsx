@@ -1,4 +1,4 @@
-"use client"
+'use client'
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
@@ -6,16 +6,32 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
 import { format } from "date-fns"
-import { CalendarIcon } from "lucide-react"
+import { CalendarIcon } from 'lucide-react'
+import DatePicker from "react-datepicker"
+import "react-datepicker/dist/react-datepicker.css"
+import { createTask } from "@/app/actions/tasks"
+
 import { Button } from "@/components/ui/button"
-import { Calendar } from "@/components/ui/calendar"
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
-import { cn } from "@/lib/utils"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import { Separator } from "@/components/ui/separator"
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { toast } from "sonner"
 
 const taskFormSchema = z.object({
   name: z.string().min(2, {
@@ -62,18 +78,29 @@ export default function NewTaskPage() {
     defaultValues,
   })
 
-  function onSubmit(data: TaskFormValues) {
+  async function onSubmit(data: TaskFormValues) {
     setIsPending(true)
-
-    // Ovdje bi se zadatak spremio u bazu podataka
-    console.log("Form data:", data)
-
-    // Simuliramo API poziv
-    setTimeout(() => {
+    
+    try {
+      const result = await createTask(data)
+      
+      if (result.error) {
+        toast.error("Greška", {
+          description: result.error,
+        })
+      } else {
+        toast.success("Zadatak uspješno dodan", {
+          description: `Zadatak "${data.name}" je uspješno spremljen.`,
+        })
+        router.push("/tasks")
+      }
+    } catch (error) {
+      toast.error("Greška", {
+        description: "Došlo je do greške prilikom spremanja zadatka.",
+      })
+    } finally {
       setIsPending(false)
-      // Nakon uspješnog spremanja, preusmjeriti na popis zadataka
-      router.push("/tasks")
-    }, 1000)
+    }
   }
 
   const watchCategory = form.watch("category")
