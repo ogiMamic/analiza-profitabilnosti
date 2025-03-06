@@ -35,7 +35,7 @@ export function TaskTypeDistribution() {
               <Cell key={`cell-${index}`} fill={entry.color} />
             ))}
           </Pie>
-          <Tooltip 
+          <Tooltip
             formatter={(value, name) => {
               return [`${value}%`, name]
             }}
@@ -45,3 +45,4 @@ export function TaskTypeDistribution() {
     </div>
   )
 }
+
