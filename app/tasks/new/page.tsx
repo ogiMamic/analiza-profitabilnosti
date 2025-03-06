@@ -1,4 +1,4 @@
-'use client'
+"use client"
 
 import { useState } from "react"
 import { useRouter } from "next/navigation"
@@ -6,31 +6,17 @@ import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
 import { format } from "date-fns"
-import { CalendarIcon } from 'lucide-react'
-import DatePicker from "react-datepicker"
-import "react-datepicker/dist/react-datepicker.css"
-import { createTask } from "@/app/actions/tasks"
-
+import { CalendarIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
-import {
-  Form,
-  FormControl,
-  FormDescription,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-} from "@/components/ui/form"
+import { Calendar } from "@/components/ui/calendar"
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select"
-import { Separator } from "@/components/ui/separator"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover"
+import { cn } from "@/lib/utils"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
+import { Separator } from "@/components/ui/separator"
+import { createTask } from "@/app/actions/task-actions"
 import { toast } from "sonner"
 
 const taskFormSchema = z.object({
@@ -80,24 +66,28 @@ export default function NewTaskPage() {
 
   async function onSubmit(data: TaskFormValues) {
     setIsPending(true)
-    
+
     try {
-      const result = await createTask(data)
-      
-      if (result.error) {
-        toast.error("Greška", {
-          description: result.error,
-        })
-      } else {
-        toast.success("Zadatak uspješno dodan", {
-          description: `Zadatak "${data.name}" je uspješno spremljen.`,
-        })
-        router.push("/tasks")
+      // Pripremi podatke za server action
+      const taskData = {
+        name: data.name,
+        category: data.category,
+        duration: data.duration,
+        cost: data.cost,
+        currentRevenue: data.category === "direct" ? data.currentRevenue : 0,
+        potentialRevenue: data.category === "investment" ? data.potentialRevenue : 0,
+        completionDate: data.completionDate.toISOString(),
+        revenueDate: data.revenueDate ? data.revenueDate.toISOString() : null,
       }
+
+      // Pozovi server action
+      await createTask(taskData)
+
+      toast.success("Zadatak je uspješno spremljen!")
+      router.push("/tasks")
     } catch (error) {
-      toast.error("Greška", {
-        description: "Došlo je do greške prilikom spremanja zadatka.",
-      })
+      console.error("Error saving task:", error)
+      toast.error("Došlo je do greške prilikom spremanja zadatka.")
     } finally {
       setIsPending(false)
     }
