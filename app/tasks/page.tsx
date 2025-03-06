@@ -3,7 +3,8 @@ import Link from "next/link"
 import { PlusCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { TasksTable } from "@/components/tasks-table"
-import { supabase } from "@/lib/supabase"
+import { createServerComponentClient } from "@supabase/auth-helpers-nextjs"
+import { cookies } from "next/headers"
 
 export const dynamic = "force-dynamic"
 
@@ -28,6 +29,9 @@ export default function TasksPage() {
 }
 
 async function TasksTableWrapper() {
+  const cookieStore = cookies()
+  const supabase = createServerComponentClient({ cookies: () => cookieStore })
+
   const { data: tasks, error } = await supabase.from("tasks").select("*").order("created_at", { ascending: false })
 
   if (error) {

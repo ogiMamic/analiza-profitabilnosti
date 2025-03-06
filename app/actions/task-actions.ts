@@ -1,6 +1,6 @@
 "use server"
 
-import { supabase, type Task } from "@/lib/supabase"
+import { supabaseAdmin, type Task } from "@/lib/supabase"
 import { revalidatePath } from "next/cache"
 
 export async function createTask(task: Omit<Task, "id" | "roi" | "created_at">) {
@@ -23,7 +23,7 @@ export async function createTask(task: Omit<Task, "id" | "roi" | "created_at">) 
   }
 
   // Spremi u Supabase
-  const { data, error } = await supabase.from("tasks").insert(taskToSave).select().single()
+  const { data, error } = await supabaseAdmin.from("tasks").insert(taskToSave).select().single()
 
   if (error) {
     console.error("Error creating task:", error)

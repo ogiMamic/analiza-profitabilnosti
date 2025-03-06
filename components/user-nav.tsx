@@ -1,4 +1,7 @@
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+"use client"
+
+import { useRouter } from "next/navigation"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import {
   DropdownMenu,
@@ -7,18 +10,45 @@ import {
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
-  DropdownMenuShortcut,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
+import { supabase } from "@/lib/supabase"
+import { useEffect, useState } from "react"
+import { toast } from "sonner"
 
 export function UserNav() {
+  const router = useRouter()
+  const [userEmail, setUserEmail] = useState<string | null>(null)
+
+  useEffect(() => {
+    async function getUserEmail() {
+      const {
+        data: { user },
+      } = await supabase.auth.getUser()
+      setUserEmail(user?.email || null)
+    }
+
+    getUserEmail()
+  }, [])
+
+  const handleSignOut = async () => {
+    try {
+      await supabase.auth.signOut()
+      toast.success("Uspješno ste odjavljeni")
+      router.push("/login")
+      router.refresh()
+    } catch (error) {
+      console.error("Error signing out:", error)
+      toast.error("Došlo je do greške prilikom odjave")
+    }
+  }
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-8 w-8 rounded-full">
           <Avatar className="h-8 w-8">
-            <AvatarImage src="/placeholder.svg?height=32&width=32" alt="@korisnik" />
-            <AvatarFallback>KO</AvatarFallback>
+            <AvatarFallback>{userEmail ? userEmail[0].toUpperCase() : "U"}</AvatarFallback>
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
@@ -26,25 +56,16 @@ export function UserNav() {
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
             <p className="text-sm font-medium leading-none">Korisnik</p>
-            <p className="text-xs leading-none text-muted-foreground">korisnik@example.com</p>
+            <p className="text-xs leading-none text-muted-foreground">{userEmail || "Korisnik"}</p>
           </div>
         </DropdownMenuLabel>
         <DropdownMenuSeparator />
         <DropdownMenuGroup>
-          <DropdownMenuItem>
-            Profil
-            <DropdownMenuShortcut>⇧⌘P</DropdownMenuShortcut>
-          </DropdownMenuItem>
-          <DropdownMenuItem>
-            Postavke
-            <DropdownMenuShortcut>⌘S</DropdownMenuShortcut>
-          </DropdownMenuItem>
+          <DropdownMenuItem onClick={() => router.push("/tasks")}>Zadaci</DropdownMenuItem>
+          <DropdownMenuItem onClick={() => router.push("/settings")}>Postavke</DropdownMenuItem>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        <DropdownMenuItem>
-          Odjava
-          <DropdownMenuShortcut>⇧⌘Q</DropdownMenuShortcut>
-        </DropdownMenuItem>
+        <DropdownMenuItem onClick={handleSignOut}>Odjava</DropdownMenuItem>
       </DropdownMenuContent>
     </DropdownMenu>
   )
